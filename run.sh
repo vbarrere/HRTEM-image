@@ -1,5 +1,7 @@
 #!/bin/bash
 
+start_time=$(date +%s.%N)
+
 export path_xyz="/home/victor.barrere@crmd.cnrs-orleans.fr/Documents/Data/Data_xyz/"
 export path_processed="/home/victor.barrere@crmd.cnrs-orleans.fr/Documents/Data/Data_processed/"
 export path_new_xyz=$path_processed"XYZ/"
@@ -58,3 +60,6 @@ do
     rm -r $path_id_sim
 
 done
+
+end_time=$(date +%s.%N)
+echo "Execution time: $(echo "$end_time - $start_time" | bc) seconds"
