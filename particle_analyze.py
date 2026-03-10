@@ -6,7 +6,6 @@ import os
 import numpy as np
 
 path_xyz = os.getenv("path_xyz")
-path_processed = os.getenv("path_processed")
 path_new_xyz = os.getenv("path_new_xyz")
 
 md_data = np.genfromtxt(os.path.join(path_xyz, "d.dat"), dtype=None)
@@ -22,14 +21,14 @@ for xyz_file in files:
 
     node = import_file(path_file)
 
-    surface_mod = ConstructSurfaceModifier()
-    node.modifiers.append(surface_mod)
-    cna_mod = CommonNeighborAnalysisModifier()
-    node.modifiers.append(cna_mod)
-    bond_angle_mod = BondAngleAnalysisModifier()
-    node.modifiers.append(bond_angle_mod)
-    csp_mod = CentroSymmetryModifier()
-    node.modifiers.append(csp_mod)
+    #surface_mod = ConstructSurfaceModifier()
+    node.modifiers.append(ConstructSurfaceModifier())
+    #cna_mod = CommonNeighborAnalysisModifier()
+    node.modifiers.append(CommonNeighborAnalysisModifier())
+    #bond_angle_mod = BondAngleAnalysisModifier()
+    node.modifiers.append(BondAngleAnalysisModifier())
+    #csp_mod = CentroSymmetryModifier()
+    node.modifiers.append(CentroSymmetryModifier())
 
     data = node.compute()
     pos = data.particle_properties.position.array
