@@ -28,7 +28,7 @@ with open(file_msa_prm, 'w') as prm_file:
     print(f"{80.0}                          (lower semi angle of image-space detector (mrad))", file=prm_file)
     print(f"{220.0}                         (upper semi angle of image-space detector (mrad))", file=prm_file)
     print(f"{0} 'detectors.prm'             (switch for using a detector definition file, and the name of the detector definition file, attention: the output file name will change when using more than one detector, the detector definitions in the preceeding two lines are ignored when using a detector definition file, all detector definitions are ignord in CTEM mode)", file=prm_file)
-    print(f"{wavelength}                    (electron wavelength (nm), <=1.0, alternatively, >1.0: electron energy (keV))", file=prm_file)
+    print(f"{electron_energy}               (electron wavelength (nm), <=1.0, alternatively, >1.0: electron energy (keV))", file=prm_file)
     print(f"{0.01}                          (de-magnified source radius (nm) for applying partial spatial coherence to STEM images)", file=prm_file)
     print(f"{3.0}                           (defocus spread (nm) (1/e half width) for STEM image simulation only)", file=prm_file)
     print(f"{2.0}                           (defocus spread kernel width for explicit focal convolution, STEM only)", file=prm_file)
