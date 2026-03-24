@@ -1,15 +1,16 @@
 #!/usr/bin/python3
 
+import glob
 import os
 
 import numpy as np
 
 
-file_xyz = os.getenv('file_xyz')
-file_cel = os.getenv('file_cel')
+path_new_xyz = os.getenv('path_new_xyz')
+path_processus = os.getenv('path_processus')
+id_cluster = os.getenv('id_cluster')
 
-
-with open(file_xyz, 'r') as xyz_file:
+with open(os.path.join(path_new_xyz, f"{id_cluster}.xyz"), 'r') as xyz_file:
     lines = xyz_file.readlines()
     n_atoms = int(lines[0].strip())
     
@@ -29,12 +30,12 @@ with open(file_xyz, 'r') as xyz_file:
 
     for i_atom in range(len(atom_lines)):
         line = atom_lines[i_atom].split()
-        pos[i_atom] = np.array([float(line[1]), float(line[2]), float(line[3])])*0.1
+        pos[i_atom] = np.array([float(line[1]), float(line[2]), float(line[3])])*0.1 + np.array([a, b, c])/2.0
         symbols.append(line[0])
 
 atom_types = set(symbols)
 
-with open(file_cel, 'w') as cel_file:
+with open(os.path.join(path_processus, f"{id_cluster}.cel"), 'w') as cel_file:
     res = ""
     for elem in atom_types:
         res += elem

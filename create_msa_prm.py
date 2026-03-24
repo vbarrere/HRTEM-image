@@ -5,10 +5,11 @@ import numpy as np
 
 electron_energy = float(os.getenv('electron_energy'))
 nz = int(os.getenv('nz'))
-file_sli = os.getenv('file_sli')
-file_msa_prm = os.getenv('file_msa_prm')
+path_processus = os.getenv('path_processus')
 
-with open(file_msa_prm, 'w') as prm_file:
+file_sli = os.path.join(path_processus, "slice")
+
+with open(os.path.join(path_processus, 'msa.prm'), 'w') as prm_file:
 
     print("'[Microscope Parameters]'", file=prm_file)
     print(f"{25.0}                          (STEM probe forming aperture: radius (mrad), rel. asymmetry, asym. dir. (rad), rel. edge)", file=prm_file)

@@ -2,32 +2,31 @@ from ovito.io import import_file
 from ovito.modifiers import *
 from ovito.data import *
 
+import glob
 import os
 import numpy as np
 
 path_xyz = os.getenv("path_xyz")
+path_processed = os.getenv("path_processed")
 path_new_xyz = os.getenv("path_new_xyz")
+id_sim = os.getenv("id_sim")
 
-md_data = np.genfromtxt(os.path.join(path_xyz, "d.dat"), dtype=None)
+md_data = np.genfromtxt(os.path.join(os.path.dirname(path_xyz), "d.dat"), dtype=None)
+first_column = np.array([row[0] for row in md_data])
+files = glob.glob(os.path.join(path_new_xyz, id_sim + "_*.xyz"))
 
-files = os.listdir(path_new_xyz)
 for xyz_file in files:
 
-    i_sim = xyz_file.split(".")[0]
-    path_file = os.path.join(path_new_xyz, xyz_file)
+    i_sim = os.path.basename(xyz_file).split(".")[0]
+    mask = first_column == int(i_sim.split("_")[0])    
+    n_steps = md_data[mask][0][3]
+    initial_temperature = md_data[mask][0][4]
 
-    n_steps = int(md_data[md_data[:, 0] == int(i_sim.split("_")[0])][3])
-    initial_temperature = float(md_data[md_data[:, 0] == int(i_sim.split("_")[0])][4])
+    node = import_file(xyz_file)
 
-    node = import_file(path_file)
-
-    #surface_mod = ConstructSurfaceModifier()
     node.modifiers.append(ConstructSurfaceModifier())
-    #cna_mod = CommonNeighborAnalysisModifier()
     node.modifiers.append(CommonNeighborAnalysisModifier())
-    #bond_angle_mod = BondAngleAnalysisModifier()
     node.modifiers.append(BondAngleAnalysisModifier())
-    #csp_mod = CentroSymmetryModifier()
     node.modifiers.append(CentroSymmetryModifier())
 
     data = node.compute()
