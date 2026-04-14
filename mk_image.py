@@ -117,6 +117,7 @@ for i_variant in range(n_variants):
             else:
                 exit(f"Error: unknown element {symbols[i_atom]}")
             print(symbols[i_atom], x, y, z, occupancy, debye_waller_factor, 0, 0, 0, file=cel_file)
+        print("*", file=cel_file)
 
 
 
@@ -144,8 +145,9 @@ for i_variant in range(n_variants):
         print(f"{len(aberrations)}", file=f)
         for i, abr in enumerate(aberrations):
             value = np.random.uniform(aberrations[i, 0], aberrations[i, 1])
-            valx = value * np.cos(np.random.uniform(0, 2*np.pi))
-            valy = value * np.sin(np.random.uniform(0, 2*np.pi))
+            alpha = np.random.uniform(0, 2*np.pi)
+            valx = value * np.cos(alpha)
+            valy = value * np.sin(alpha)
             aberrations_values[i] = [valx, valy]
             print(f"{i} {valx} {valy}", file=f) 
         print(f"{250.0} {0.03}", file=f)   # line 19+Nabr
@@ -163,6 +165,8 @@ for i_variant in range(n_variants):
         os.remove(fichier)
     subprocess.run(["wavimg", "-prm", f"tmp_{process_id}/wavimg.prm", "-out", f"tmp_{process_id}/image.dat"], stdout=subprocess.DEVNULL)
     os.remove(f"tmp_{process_id}/msa_sl0{nz}.wav")
+    os.remove(f"tmp_{process_id}/wavimg.prm")
+    os.remove(f"tmp_{process_id}/slice.prm")
 
 
 
