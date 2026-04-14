@@ -2,3 +2,4 @@ CELSLC_used.cel
 nohup.out
 *.dat
 /hrtem_images
+stop.sh

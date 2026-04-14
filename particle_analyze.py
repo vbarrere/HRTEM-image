@@ -28,7 +28,7 @@ for xyz_file in glob.glob("tmp_%s/xyz/*.xyz" % process_id):
     node.modifiers.append(CommonNeighborAnalysisModifier())
     node.modifiers.append(BondAngleAnalysisModifier())
     node.modifiers.append(CentroSymmetryModifier())
-
+    
     data = node.compute()
     pos = data.particle_properties.position.array
     n_atoms = pos.shape[0]

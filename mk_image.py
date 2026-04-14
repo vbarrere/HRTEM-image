@@ -31,8 +31,10 @@ aberrations = np.array([[0.0, 0.0], # image shift
               [0.0, 0.0]])          # star aberration
 
 md_data = np.genfromtxt(f"tmp_{process_id}/tmp.dat", dtype=str)
-first_column = np.array([row[0] for row in md_data]) # Extract the first column (id_sim)
-
+if md_data.ndim == 1:
+    id_sim_column = md_data[0] # If there is only one line in the .dat file, md_data will be 1D and we need to handle it separately
+else:
+    id_sim_column = np.array([row[0] for row in md_data])
 
 
 """ Read the .xyz file and extract atomic positions and symbols """
@@ -185,8 +187,7 @@ for i_variant in range(n_variants):
 
 
     """ Save the simulation parameters """
-
-    mask = first_column == os.path.basename(sys.argv[1]).split('.')[0]
+    mask = id_sim_column == os.path.basename(sys.argv[1]).split('.')[0]
     param = md_data[mask][0]
     f = open(f"tmp_{process_id}/data.dat", "a")
     print(id_sim, param[1], param[2], param[3], param[4], param[5], param[6], param[7], param[8], param[9], param[10], param[11], param[12], param[13], param[14], param[15], param[16], param[17], gyration_radius, nat1, nat2, nat1_out, nat2_out, nat1_in, nat2_in, r_cm1[0], r_cm1[1], r_cm1[2], r_cm2[0], r_cm2[1], r_cm2[2], r_cm[0], r_cm[1], r_cm[2], d_com, counts, phi, theta, aberrations_values[0][0], aberrations_values[0][1], aberrations_values[1][0], aberrations_values[1][1], aberrations_values[2][0], aberrations_values[2][1], aberrations_values[3][0], aberrations_values[3][1], aberrations_values[4][0], aberrations_values[4][1], aberrations_values[5][0], aberrations_values[5][1], aberrations_values[6][0], aberrations_values[6][1], sep="\t", file=f)
