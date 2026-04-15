@@ -2,11 +2,11 @@
 
 import glob
 import os
+import random
 import subprocess
 import sys
 
-import matplotlib.pyplot    as plt
-import numpy                as np
+import numpy as np
 
 from PIL import Image
 
@@ -14,27 +14,30 @@ from PIL import Image
 """ Parameters initialization """
 
 process_id = os.getenv("process_id")
-box = 100.0   # EN ANGSTROM
+box = 50.0   # EN ANGSTROM
 n_variants = 10 # Number of variants for each structure (random rotation, interatomic distance variation, aberrations)
 dbf_ag = 0.019 # 0.008 XXX
 dbf_co = 0.015 # 0.004 XXX
-nx = 128
-ny = 128
+nx = 64
+ny = 64
 nz = int(os.getenv('nz'))
 electron_energy = float(os.getenv('electron_energy'))
-count_min = 100
-count_max = 500
-aberrations = np.array([[0.0, 0.0], # image shift
-              [-4.0, -8.0],         # defocus
-              [0.0, 0.0],           # astigmatism
-              [0.0, 0.0],           # coma
-              [0.0, 0.0],           # three-lobe aberration (Three-fold astigmatism ?)
-              [0.001, 0.001],       # spherical aberration
-              [0.0, 0.0]])          # star aberration
+count_min = 50
+count_max = 100
+aberrations = np.array([
+                [0.0, 0.0],         # image shift
+                #[-4.0, -8.0],      # defocus
+                [0.0, 0.0],       # defocus
+                [0.0, 0.0],         # astigmatism
+                [0.0, 0.0],         # coma
+                [0.0, 0.0],         # three-lobe aberration (Three-fold astigmatism ?)
+                [0.0, 0.0],     # spherical aberration
+                [0.0, 0.0]          # star aberration
+])          
 
 md_data = np.genfromtxt(f"tmp_{process_id}/tmp.dat", dtype=str)
 if md_data.ndim == 1:
-    id_sim_column = md_data[0] # If there is only one line in the .dat file, md_data will be 1D and we need to handle it separately
+    id_sim_column = np.array([md_data[0]]) # If there is only one line in the .dat file, md_data will be 1D and we need to handle it separately
 else:
     id_sim_column = np.array([row[0] for row in md_data])
 
@@ -99,7 +102,12 @@ for i_variant in range(n_variants):
 
 
     """ Creation of the cel file for celslc program """
-
+    particle_size = np.array([np.max(pos[:, 0]) - np.min(pos[:, 0]), np.max(pos[:, 1]) - np.min(pos[:, 1]), np.max(pos[:, 2]) - np.min(pos[:, 2])]) + 5.0
+    offset = np.array([
+        random.uniform(particle_size[0]/2, box-particle_size[0]/2),
+        random.uniform(particle_size[1]/2, box-particle_size[1]/2),
+        random.uniform(particle_size[2]/2, box-particle_size[2]/2)
+    ])
     atom_types = set(symbols)
     with open(f"tmp_{process_id}/coord.cel", 'w') as cel_file:
         res = ""
@@ -108,9 +116,12 @@ for i_variant in range(n_variants):
         print(f"{res} {n_atoms}", file=cel_file)
         print(0, box*0.1, box*0.1, box*0.1, 90.0, 90.0, 90.0, file=cel_file)
         for i_atom in range(n_atoms):
-            x = pos[i_atom][0]/box + 0.5
-            y = pos[i_atom][1]/box + 0.5
-            z = pos[i_atom][2]/box + 0.5
+            #x = pos[i_atom][0]/box + 0.5
+            #y = pos[i_atom][1]/box + 0.5
+            #z = pos[i_atom][2]/box + 0.5
+            x = (pos[i_atom][0] + offset[0]) / box
+            y = (pos[i_atom][1] + offset[1]) / box
+            z = (pos[i_atom][2] + offset[2]) / box
             occupancy = 1.0
             if symbols[i_atom] == 'Ag':
                 debye_waller_factor = dbf_ag
@@ -161,7 +172,8 @@ for i_variant in range(n_variants):
     """ DrProbe Simulation """
 
     subprocess.run(["celslc", "-cel", f"tmp_{process_id}/coord.cel", "-slc", f"tmp_{process_id}/slice", "-nx", str(nx), "-ny", str(ny), "-nz", str(nz), "-ht", str(electron_energy), "-dwf", "-abs"], stdout=subprocess.DEVNULL)
-    subprocess.run(["rm", "-f", f"tmp_{process_id}/coord.cel"])
+    #subprocess.run(["rm", "-f", f"tmp_{process_id}/coord.cel"])
+    os.remove(f"tmp_{process_id}/coord.cel")
     subprocess.run(["msa", "-prm", f"tmp_{process_id}/msa.prm", "-out", f"tmp_{process_id}/msa.wav", "/ctem"], stdout=subprocess.DEVNULL)
     for fichier in glob.glob(f"tmp_{process_id}/*.sli"):
         os.remove(fichier)
@@ -175,14 +187,16 @@ for i_variant in range(n_variants):
     """ Add Poisson noise to the image """
 
     data = np.fromfile(f"tmp_{process_id}/image.dat", dtype=np.float32)
-    subprocess.run(["rm", "-f", f"tmp_{process_id}/image.dat"])
+    #subprocess.run(["rm", "-f", f"tmp_{process_id}/image.dat"])
+    os.remove(f"tmp_{process_id}/image.dat")
     counts = np.random.uniform(count_min, count_max)
     data_normalized = (data - np.min(data)) / (np.max(data) - np.min(data))
     image = np.random.poisson(counts*data_normalized.reshape((nx, ny)))
 
 
 
-    """ Save the simulation parameters """
+    """ Save the simulation parameters and the HRTEM image """
+
     id_sim = f"{os.path.basename(sys.argv[1]).split('.')[0]}_{i_variant}"
     mask = id_sim_column == os.path.basename(sys.argv[1]).split('.')[0]
     param = md_data[mask][0]
@@ -190,9 +204,5 @@ for i_variant in range(n_variants):
     print(id_sim, param[1], param[2], param[3], param[4], param[5], param[6], param[7], param[8], param[9], param[10], param[11], param[12], param[13], param[14], param[15], param[16], param[17], gyration_radius, nat1, nat2, nat1_out, nat2_out, nat1_in, nat2_in, r_cm1[0], r_cm1[1], r_cm1[2], r_cm2[0], r_cm2[1], r_cm2[2], r_cm[0], r_cm[1], r_cm[2], d_com, counts, phi, theta, aberrations_values[0][0], aberrations_values[0][1], aberrations_values[1][0], aberrations_values[1][1], aberrations_values[2][0], aberrations_values[2][1], aberrations_values[3][0], aberrations_values[3][1], aberrations_values[4][0], aberrations_values[4][1], aberrations_values[5][0], aberrations_values[5][1], aberrations_values[6][0], aberrations_values[6][1], sep="\t", file=f)
     f.close()
 
-
-
-    """ Save the HRTEM image """
-    
     image = np.array(image/np.max(image)*255, dtype=np.uint8)
     Image.fromarray(image).convert('L').save(f"hrtem_images/{id_sim}.png")
